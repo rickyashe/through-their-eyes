@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Through Their Eyes — A Dyslexia Awareness Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e1116;
+    --panel: #161b22;
+    --panel-2: #1c232d;
+    --ink: #e6e6e6;
+    --ink-dim: #8b949e;
+    --rule: #30363d;
+    --accent: #ffb454;
+    --accent-2: #79c0ff;
+    --warn: #ff7b72;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Crimson Pro', Georgia, serif;
+    min-height: 100vh;
+  }
+
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  header {
+    margin-bottom: 36px;
+  }
+
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+    color: var(--ink);
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent-2);
+  }
+
+  .byline {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-dim);
+    letter-spacing: 0.1em;
+    margin-top: 8px;
+  }
+
+  .byline strong { color: var(--accent); }
+
+  .lede {
+    font-size: 1.2rem;
+    line-height: 1.65;
+    color: var(--ink-dim);
+    max-width: 620px;
+    margin-bottom: 6px;
+  }
+
+  .disclaimer {
+    background: rgba(255,123,114,0.08);
+    border-left: 3px solid var(--warn);
+    padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--ink-dim);
+    margin-bottom: 36px;
+  }
+
+  .disclaimer strong { color: var(--warn); display: block; margin-bottom: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; }
+
+  /* BOOKMARKLET */
+  .bookmarklet-hero {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 36px;
+    text-align: center;
+  }
+
+  .bookmarklet-hero h2 {
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .bookmarklet-hero h2 em { font-style: italic; color: var(--accent-2); }
+
+  .bookmarklet-hero p {
+    font-size: 0.95rem;
+    color: var(--ink-dim);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  #bookmarklet {
+    display: inline-block;
+    background: var(--accent);
+    color: #0e1116;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 22px;
+    border-radius: 8px;
+    text-decoration: none;
+    cursor: grab;
+    border: none;
+    transition: opacity 0.15s, transform 0.1s;
+    user-select: none;
+  }
+
+  #bookmarklet:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  .drag-hint {
+    margin-top: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  /* CONTROLS */
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent-2);
+    margin-bottom: 14px;
+    display: block;
+  }
+
+  .controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .ctrl {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+  }
+
+  .ctrl:hover { border-color: var(--ink-dim); }
+
+  .ctrl.active {
+    border-color: var(--accent);
+    background: rgba(255,180,84,0.07);
+  }
+
+  .ctrl input[type=checkbox] { display: none; }
+
+  .ctrl-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 2px solid var(--rule);
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .ctrl.active .ctrl-dot {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0e1116;
+    font-weight: 700;
+  }
+
+  .ctrl-text strong {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 3px;
+    letter-spacing: 0.03em;
+  }
+
+  .ctrl-text small {
+    font-size: 12px;
+    color: var(--ink-dim);
+    line-height: 1.4;
+    font-family: 'Crimson Pro', serif;
+  }
+
+  /* PREVIEW */
+  .preview {
+    background: #fff;
+    color: #111;
+    border-radius: 12px;
+    padding: 32px 36px;
+    margin-bottom: 36px;
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .article h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+    line-height: 1.3;
+    color: #1a1a1a;
+  }
+
+  .article p {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: #333;
+    margin-bottom: 14px;
+  }
+
+  /* SIM TEXT SPANS */
+  .sim-text .ch {
+    display: inline-block;
+    transition: transform 0.2s;
+    will-change: transform;
+  }
+
+  .sim-text .word { display: inline-block; }
+  .sim-text .space { display: inline; }
+
+  /* FX CLASSES */
+  body.fx-jitter .sim-text .ch {
+    animation: jitter 1.8s infinite;
+    animation-delay: var(--d, 0s);
+  }
+
+  @keyframes jitter {
+    0%, 100% { transform: translate(0,0) rotate(0); }
+    20% { transform: translate(var(--jx,1.5px), var(--jy,-1px)) rotate(var(--jr,2.5deg)); }
+    50% { transform: translate(calc(var(--jx,1px)*-1), var(--jy,1px)) rotate(calc(var(--jr,2deg)*-1)); }
+    75% { transform: translate(var(--jx,1px), 0) rotate(0); }
+  }
+
+  body.fx-swap .sim-text .ch.swapped {
+    animation: swapLetter 4s infinite;
+    animation-delay: var(--swapD, 0s);
+    color: var(--warn);
+  }
+
+  @keyframes swapLetter {
+    0%, 89%, 100% { transform: scaleX(1); opacity: 1; }
+    45%, 75% { transform: scaleX(-1); opacity: 0.7; }
+  }
+
+  body.fx-blur .sim-text {
+    filter: blur(0.9px);
+  }
+
+  body.fx-motion .sim-text .word {
+    animation: drift 5s infinite ease-in-out;
+    animation-delay: var(--driftD, 0s);
+  }
+
+  @keyframes drift {
+    0%, 100% { transform: translateY(0); }
+    25% { transform: translateY(-2px); }
+    75% { transform: translateY(2.5px); }
+  }
+
+  body.fx-contrast .sim-text { color: #aaa !important; }
+
+  body.fx-crowd .sim-text { letter-spacing: -0.09em; }
+
+  body.fx-river .sim-text {
+    text-align: justify;
+    word-spacing: 0.45em;
+  }
+
+  body.fx-friendly .preview {
+    background: #fdf6e3 !important;
+    font-family: 'Verdana', sans-serif !important;
+  }
+
+  body.fx-friendly .sim-text,
+  body.fx-friendly .article p,
+  body.fx-friendly .article h2 {
+    font-family: 'Verdana', sans-serif !important;
+    line-height: 2.1 !important;
+    letter-spacing: 0.05em;
+    word-spacing: 0.18em;
+    font-size: 16px !important;
+    color: #333 !important;
+  }
+
+  /* Resources */
+  .resources {
+    padding: 22px 24px;
+    background: var(--panel-2);
+    border-radius: 10px;
+    border: 1px solid var(--rule);
+  }
+
+  .resources h3 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent-2);
+    margin-bottom: 12px;
+  }
+
+  .resources ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .resources li {
+    font-size: 0.95rem;
+    color: var(--ink-dim);
+    line-height: 1.5;
+  }
+
+  .resources li::before {
+    content: '→ ';
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+  }
+
+  footer {
+    margin-top: 40px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    text-align: center;
+  }
+
+  footer span { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Awareness Tool · v2.0</div>
+    <h1>Through <em>their</em> eyes.</h1>
+    <p class="lede">A simulator that approximates visual experiences sometimes reported by people with dyslexia. Use the bookmarklet to apply effects to <em>any website</em>, or experiment with the demo below.</p>
+    <div class="byline">Created by <strong>Ricky Ashe</strong> · Nerd4u</div>
+  </header>
+
+  <div class="disclaimer">
+    <strong>⚠ Important Context</strong>
+    Dyslexia is primarily a cognitive difference in language processing — not a vision disorder. Most people with dyslexia don't see letters literally moving or scrambled. This tool simulates a few commonly described visual experiences for empathy and awareness only. Every person's experience is different.
+  </div>
+
+  <div class="bookmarklet-hero">
+    <h2>Apply it to <em>any</em> website</h2>
+    <p>Drag the button below into your browser's bookmarks bar, then click it on any page.</p>
+    <a id="bookmarklet" href="#">⊕ Through Their Eyes</a>
+    <div class="drag-hint">↑ drag this to your bookmarks bar</div>
+  </div>
+
+  <span class="section-label">Choose effects to simulate</span>
+  <div class="controls-grid">
+    <label class="ctrl" data-fx="jitter">
+      <input type="checkbox" />
+      <div class="ctrl-dot">✓</div>
+      <div class="ctrl-text">
+        <strong>Letter Jitter</strong>
+        <small>Letters shift and wobble unpredictably</small>
+      </div>
+    </label>
+    <label class="ctrl" data-fx="swap">
+      <input type="checkbox" />
+      <div class="ctrl-dot">✓</div>
+      <div class="ctrl-text">
+        <strong>Character Swap</strong>
+        <small>Similar letters flip or mirror randomly</small>
+      </div>
+    </label>
+    <label class="ctrl" data-fx="blur">
+      <input type="checkbox" />
+      <div class="ctrl-dot">✓</div>
+      <div class="ctrl-text">
+        <strong>Visual Blur</strong>
+        <small>Text appears soft and hard to focus</small>
+      </div>
+    </label>
+    <label class="ctrl" data-fx="motion">
+      <input type="checkbox" />
+      <div class="ctrl-dot">✓</div>
+      <div class="ctrl-text">
+        <strong>Word Motion</strong>
+        <small>Words gently drift up and down</small>
+      </div>
+    </label>
+    <label class="ctrl" data-fx="contrast">
+      <input type="checkbox" />
+      <div class="ctrl-dot">✓</div>
+      <div class="ctrl-text">
+        <strong>Low Contrast</strong>
+        <small>Text fades into the background</small>
+      </div>
+    </label>
+    <label class="ctrl" data-fx="crowd">
+      <input type="checkbox" />
+      <div class="ctrl-dot">✓</div>
+      <div class="ctrl-text">
+        <strong>Crowding</strong>
+        <small>Letters compress and crowd together</small>
+      </div>
+    </label>
+    <label class="ctrl" data-fx="river">
+      <input type="checkbox" />
+      <div class="ctrl-dot">✓</div>
+      <div class="ctrl-text">
+        <strong>River Effect</strong>
+        <small>Spaces create distracting visual channels</small>
+      </div>
+    </label>
+    <label class="ctrl" data-fx="friendly">
+      <input type="checkbox" />
+      <div class="ctrl-dot">✓</div>
+      <div class="ctrl-text">
+        <strong>Dyslexia-Friendly</strong>
+        <small>Shows typography best practices</small>
+      </div>
+    </label>
+  </div>
+
+  <div class="preview">
+    <div class="article">
+      <h2 class="sim-text" id="headline">The Quick Brown Fox and the Art of Reading</h2>
+      <p class="sim-text" id="para1">Reading is something most people take for granted. The brain decodes symbols on a page and transforms them into meaning — almost instantly, and without effort. But for millions of people, that process works differently. Words shift. Letters blur. The page becomes noise.</p>
+      <p class="sim-text" id="para2">Dyslexia affects roughly one in five people. It has nothing to do with intelligence. Many people with dyslexia are highly creative, strategic thinkers — they simply process written language through a different path. The right support, tools, and understanding can make all the difference.</p>
+      <p class="sim-text" id="para3">This simulator cannot fully replicate what it's like to have dyslexia. But spending a few minutes here might help you understand why the right font, spacing, and design choices matter more than most people realize.</p>
+    </div>
+  </div>
+
+  <div class="resources">
+    <h3>Learn More</h3>
+    <ul>
+      <li>International Dyslexia Association — dyslexiaida.org</li>
+      <li>Yale Center for Dyslexia & Creativity — dyslexia.yale.edu</li>
+      <li>British Dyslexia Association style guide for accessible design</li>
+      <li>OpenDyslexic — free dyslexia-friendly font</li>
+    </ul>
+  </div>
+
+  <footer>Made with purpose by <span>Ricky Ashe</span> · Nerd4u · Through Their Eyes v2.0</footer>
+</div>
+
+<script>
+  // Wrap sim-text content into character spans
+  function wrapText(el) {
+    const html = el.innerHTML;
+    // Split into words + spaces
+    const parts = [];
+    let current = '';
+    for (let i = 0; i < html.length; i++) {
+      if (html[i] === ' ') {
+        if (current) parts.push({type:'word', text:current});
+        parts.push({type:'space'});
+        current = '';
+      } else {
+        current += html[i];
+      }
+    }
+    if (current) parts.push({type:'word', text:current});
+
+    const swappable = ['b','d','p','q','n','u','m','w','6','9','i','l','1'];
+
+    el.innerHTML = parts.map(part => {
+      if (part.type === 'space') return '<span class="space"> </span>';
+      const chars = [...part.text].map((ch, i) => {
+        const jx = (Math.random()*3-1.5).toFixed(1);
+        const jy = (Math.random()*2-1).toFixed(1);
+        const jr = (Math.random()*5-2.5).toFixed(1);
+        const d = (Math.random()*2).toFixed(2);
+        const isSwappable = swappable.includes(ch.toLowerCase());
+        const swapD = (Math.random()*3).toFixed(2);
+        return `<span class="ch${isSwappable?' swapped':''}" style="--jx:${jx}px;--jy:${jy}px;--jr:${jr}deg;--d:${d}s;--swapD:${swapD}s">${ch}</span>`;
+      }).join('');
+      const driftD = (Math.random()*4).toFixed(2);
+      return `<span class="word" style="--driftD:${driftD}s">${chars}</span>`;
+    }).join('');
+  }
+
+  document.querySelectorAll('.sim-text').forEach(wrapText);
+
+  // Controls
+  document.querySelectorAll('.ctrl').forEach(label => {
+    const cb = label.querySelector('input');
+    const fx = label.dataset.fx;
+    label.addEventListener('click', () => {
+      cb.checked = !cb.checked;
+      label.classList.toggle('active', cb.checked);
+      document.body.classList.toggle('fx-' + fx, cb.checked);
+      // Friendly mode resets others for demo
+    });
+  });
+
+  // Bookmarklet
+  const bookmarkletCode = `(function(){
+    if(document.getElementById('__dlx_style')){
+      document.getElementById('__dlx_style').remove();
+      document.getElementById('__dlx_panel').remove();
+      return;
+    }
+    var style=document.createElement('style');
+    style.id='__dlx_style';
+    style.textContent=\`
+      body.__dlx_jitter *{animation:__dlx_j 1.8s infinite!important}
+      @keyframes __dlx_j{0%,100%{transform:translate(0,0)}33%{transform:translate(1.5px,-1px) rotate(2deg)}66%{transform:translate(-1px,1px) rotate(-2deg)}}
+      body.__dlx_blur *{filter:blur(0.9px)!important}
+      body.__dlx_swap *{font-variant:small-caps;letter-spacing:0.04em}
+      body.__dlx_crowd *{letter-spacing:-0.08em!important}
+      body.__dlx_contrast *{color:#aaa!important}
+      body.__dlx_river *{text-align:justify!important;word-spacing:0.45em!important}
+      body.__dlx_friendly *{font-family:Verdana,sans-serif!important;line-height:2!important;letter-spacing:0.05em;word-spacing:0.15em}
+      #__dlx_panel{position:fixed;bottom:20px;right:20px;background:#1c232d;color:#e6e6e6;padding:16px 18px;border-radius:12px;font-family:monospace;font-size:12px;z-index:99999;border:1px solid #30363d;min-width:200px;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
+      #__dlx_panel h3{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#79c0ff;margin-bottom:10px}
+      #__dlx_panel label{display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;font-size:12px}
+      .__dlx_close{cursor:pointer;float:right;color:#ff7b72;font-size:14px;background:none;border:none;color:#ff7b72}
+    \`;
+    document.head.appendChild(style);
+    var fxs=['jitter','blur','crowd','contrast','river','friendly'];
+    var panel=document.createElement('div');
+    panel.id='__dlx_panel';
+    panel.innerHTML='<button class="__dlx_close" onclick="this.closest(\'#__dlx_panel\').remove();document.getElementById(\'__dlx_style\').remove();document.body.className=document.body.className.replace(/\\\\s*__dlx_\\\\w+/g,\\'\\')">✕</button><h3>Through Their Eyes</h3>'+fxs.map(f=>'<label><input type="checkbox" onchange="document.body.classList.toggle(\\'__dlx_'+f+'\\',this.checked)"> '+f+'</label>').join('');
+    document.body.appendChild(panel);
+  })();`;
+
+  const minified = bookmarkletCode.replace(/\n\s+/g,' ').replace(/\s{2,}/g,' ');
+  document.getElementById('bookmarklet').href = 'javascript:' + encodeURIComponent(minified);
+</script>
+</body>
+</html>
